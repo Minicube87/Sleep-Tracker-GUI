@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sleep Tracker - Schlafqualität analysieren">
+    <title>Sleep Tracker 🌙</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Sleep Tracker</h1>
+            <p class="subtitle">Analysiere deine Schlafqualität mit KI</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Form -->
+            <section class="form-section" id="formSection">
+                <form id="sleepForm" class="sleep-form">
+                    <!-- Date Input -->
+                    <div class="form-group">
+                        <label for="date">Datum</label>
+                        <input 
+                            type="date" 
+                            id="date" 
+                            name="date" 
+                            required
+                        >
+                    </div>
+
+                    <!-- Total Sleep -->
+                    <div class="form-group">
+                        <label>Gesamtschlaf</label>
+                        <div class="time-input-group">
+                            <input 
+                                type="number" 
+                                id="totalSleepHours" 
+                                name="totalSleepHours" 
+                                min="0" 
+                                max="24" 
+                                placeholder="Stunden"
+                                required
+                            >
+                            <span class="separator">h</span>
+                            <input 
+                                type="number" 
+                                id="totalSleepMinutes" 
+                                name="totalSleepMinutes" 
+                                min="0" 
+                                max="59" 
+                                placeholder="Minuten"
+                                required
+                            >
+                            <span class="separator">min</span>
+                        </div>
+                    </div>
+
+                    <!-- Awake Time -->
+                    <div class="form-group">
+                        <label for="awake"></label>Wach</label>
+                        <div class="time-input-group">
+                            <input 
+                                type="number" 
+                                id="awake" 
+                                name="awake" 
+                                min="0" 
+                                max="1440" 
+                                placeholder="Minuten"
+                                required
+                            >
+                            <span class="separator">min</span>
+                        </div>
+                    </div>
+
+                    <!-- REM Sleep -->
+                    <div class="form-group">
+                        <label>REM</label>
+                        <div class="time-input-group">
+                            <input 
+                                type="number" 
+                                id="remHours" 
+                                name="remHours" 
+                                min="0" 
+                                max="12" 
+                                placeholder="Stunden"
+                                required
+                            >
+                            <span class="separator">h</span>
+                            <input 
+                                type="number" 
+                                id="remMinutes" 
+                                name="remMinutes" 
+                                min="0" 
+                                max="59" 
+                                placeholder="Minuten"
+                                required
+                            >
+                            <span class="separator">min</span>
+                        </div>
+                    </div>
+
+                    <!-- Light Sleep -->
+                    <div class="form-group">
+                        <label>Kern (Light)</label>
+                        <div class="time-input-group">
+                            <input 
+                                type="number" 
+                                id="lightHours" 
+                                name="lightHours" 
+                                min="0" 
+                                max="12" 
+                                placeholder="Stunden"
+                                required
+                            >
+                            <span class="separator">h</span>
+                            <input 
+                                type="number" 
+                                id="lightMinutes" 
+                                name="lightMinutes" 
+                                min="0" 
+                                max="59" 
+                                placeholder="Minuten"
+                                required
+                            >
+                            <span class="separator">min</span>
+                        </div>
+                    </div>
+
+                    <!-- Deep Sleep -->
+                    <div class="form-group">
+                        <label>Tief (Deep)</label>
+                        <div class="time-input-group">
+                            <input 
+                                type="number" 
+                                id="deepHours" 
+                                name="deepHours" 
+                                min="0" 
+                                max="12" 
+                                placeholder="Stunden"
+                                required
+                            >
+                            <span class="separator">h</span>
+                            <input 
+                                type="number" 
+                                id="deepMinutes" 
+                                name="deepMinutes" 
+                                min="0" 
+                                max="59" 
+                                placeholder="Minuten"
+                                required
+                            >
+                            <span class="separator">min</span>
+                        </div>
+                    </div>
+
+                    <!-- Time Span -->
+                    <div class="form-group">
+                        <label>Zeitspanne</label>
+                        <div class="time-span-group">
+                            <div>
+                                <label for="sleepStart" class="sub-label">Von</label>
+                                <input 
+                                    type="time" 
+                                    id="sleepStart" 
+                                    name="sleepStart" 
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label for="sleepEnd" class="sub-label">Bis</label>
+                                <input 
+                                    type="time" 
+                                    id="sleepEnd" 
+                                    name="sleepEnd" 
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        Analysieren
+                    </button>
+                </form>
+            </section>
+
+            <!-- Loading State -->
+            <div class="loading-state hidden" id="loadingState">
+                <div class="spinner"></div>
+                <p>Analysiere deine Schlafqualität...</p>
+            </div>
+
+            <!-- Results Section -->
+            <section class="results-section hidden" id="resultsSection">
+                <div class="results-header">
+                    <h2>Deine Schlaf-Analyse</h2>
+                    <button class="btn-back" id="backBtn">← Zurück</button>
+                </div>
+                <div class="results-content" id="resultsContent">
+                    <!-- Results will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <div class="error-section hidden" id="errorSection">
+                <div class="error-box">
+                    <h3>Fehler</h3>
+                    <p id="errorMessage"></p>
+                    <button class="btn-back" id="errorBackBtn">← Zurück</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Sleep Tracker v1.0 | Powered by AI</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

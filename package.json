@@ -1,0 +1,23 @@
+{
+  "name": "sleep-tracker-gui",
+  "version": "1.0.0",
+  "description": "Mobile-optimized Sleep Tracker with AI-powered analysis using OpenAI ChatGPT API",
+  "main": "api/analyze.js",
+  "scripts": {
+    "dev": "node api/analyze.js",
+    "start": "node api/analyze.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sleep-tracking",
+    "sleep-quality",
+    "biohacking",
+    "ai-analysis",
+    "openai",
+    "chatgpt"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
