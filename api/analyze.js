@@ -17,14 +17,8 @@ const fetch = globalThis.fetch;
  * Handles POST requests with sleep data
  */
 module.exports = async (req, res) => {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
+    // CORS is handled by server.js middleware
+    // This handler is called after CORS headers are already set
     
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
@@ -68,10 +62,8 @@ module.exports = async (req, res) => {
         const systemPrompt = createSystemPrompt();
         const userPrompt = createUserPrompt(formattedData);
         
-        console.log('Sending request to OpenAI...');
-        console.log('API Key present:', !!apiKey);
-        console.log('System prompt length:', systemPrompt.length);
-        console.log('User prompt:', userPrompt);
+        // Minimal logging (no sensitive data)
+        console.log('Processing sleep analysis request...');
         
         // Call OpenAI API
         const analysis = await callOpenAIAPI(apiKey, systemPrompt, userPrompt);
@@ -102,16 +94,94 @@ module.exports = async (req, res) => {
 /**
  * Validate sleep input data
  */
+/**
+ * Sanitize string input to prevent prompt injection
+ */
+function sanitizeString(str) {
+    if (typeof str !== 'string') return str;
+    // Remove potential prompt injection patterns
+    return str
+        .replace(/ignore\s*(all|previous|above)/gi, '')
+        .replace(/system\s*prompt/gi, '')
+        .replace(/you\s*are\s*(now|a)/gi, '')
+        .replace(/pretend\s*(to|you)/gi, '')
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        .trim()
+        .substring(0, 500); // Limit length
+}
+
+/**
+ * Sanitize number input
+ */
+function sanitizeNumber(num, min = 0, max = 1440) {
+    const parsed = parseInt(num, 10);
+    if (isNaN(parsed)) return 0;
+    return Math.max(min, Math.min(max, parsed));
+}
+
+/**
+ * Sanitize time string (HH:MM format)
+ */
+function sanitizeTime(time) {
+    if (typeof time !== 'string') return '00:00';
+    const match = time.match(/^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/);
+    return match ? time : '00:00';
+}
+
+/**
+ * Sanitize date string (YYYY-MM-DD format)
+ */
+function sanitizeDate(date) {
+    if (typeof date !== 'string') return new Date().toISOString().split('T')[0];
+    const match = date.match(/^\d{4}-\d{2}-\d{2}$/);
+    return match ? date : new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Validate and sanitize sleep input data
+ */
 function validateSleepInput(data) {
-    if (!data) {
-        return { valid: false, error: 'Keine Daten empfangen' };
+    if (!data || typeof data !== 'object') {
+        return { valid: false, error: 'Invalid request data' };
     }
     
     const required = ['date', 'totalSleep', 'rem', 'light', 'deep', 'sleepTime'];
     for (const field of required) {
         if (!data[field]) {
-            return { valid: false, error: `Feld erforderlich: ${field}` };
+            return { valid: false, error: `Field required: ${field}` };
         }
+    }
+    
+    // Sanitize all input data
+    data.date = sanitizeDate(data.date);
+    
+    if (data.totalSleep) {
+        data.totalSleep.hours = sanitizeNumber(data.totalSleep.hours, 0, 24);
+        data.totalSleep.minutes = sanitizeNumber(data.totalSleep.minutes, 0, 59);
+    }
+    
+    if (data.awake) {
+        data.awake.minutes = sanitizeNumber(data.awake.minutes, 0, 480);
+    }
+    
+    if (data.rem) {
+        data.rem.hours = sanitizeNumber(data.rem.hours, 0, 12);
+        data.rem.minutes = sanitizeNumber(data.rem.minutes, 0, 59);
+    }
+    
+    if (data.light) {
+        data.light.hours = sanitizeNumber(data.light.hours, 0, 12);
+        data.light.minutes = sanitizeNumber(data.light.minutes, 0, 59);
+    }
+    
+    if (data.deep) {
+        data.deep.hours = sanitizeNumber(data.deep.hours, 0, 12);
+        data.deep.minutes = sanitizeNumber(data.deep.minutes, 0, 59);
+    }
+    
+    if (data.sleepTime) {
+        data.sleepTime.from = sanitizeTime(data.sleepTime.from);
+        data.sleepTime.to = sanitizeTime(data.sleepTime.to);
     }
     
     return { valid: true };
@@ -224,9 +294,6 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
     };
     
     try {
-        console.log('Fetching OpenAI API:', url);
-        console.log('Payload:', JSON.stringify(payload));
-        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -236,9 +303,7 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
             body: JSON.stringify(payload)
         });
         
-        console.log('Response status:', response.status);
         const data = await response.json();
-        console.log('Full OpenAI response:', JSON.stringify(data, null, 2));
         
         if (!response.ok) {
             throw new Error(
@@ -251,7 +316,7 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
         }
         
         const content = data.choices[0].message.content;
-        console.log('OpenAI Response text:', content);
+        console.log('Analysis completed successfully');
         
         return content;
         
