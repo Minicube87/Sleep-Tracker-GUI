@@ -8,9 +8,9 @@
 // CONFIGURATION
 // ===========================
 const API_CONFIG = {
-    // Ändere diese IP wenn deine RPi eine andere hat
-    RPI_IP: '192.168.178.34',
-    RPI_PORT: 3000
+    // IP of backend service
+    RPI_IP: 'raspberrypi.local',
+    RPI_PORT: 443
 };
 
 // DOM Elements
@@ -178,7 +178,7 @@ function determineApiUrl() {
     
     // GitHub Pages → Verbinde zur RPi
     if (protocol === 'https:' && hostname.includes('github.io')) {
-        return `http://${API_CONFIG.RPI_IP}:${API_CONFIG.RPI_PORT}/api/analyze`;
+        return `https://${API_CONFIG.RPI_IP}:${API_CONFIG.RPI_PORT}/api/analyze`;
     }
     
     // Local development: Frontend on port 8000 → Backend on 3000
