@@ -9,7 +9,7 @@
 // ===========================
 const API_CONFIG = {
     // IP of backend service
-    RPI_IP: 'raspberrypi.local',
+    RPI_IP: '192.168.178.34',
     RPI_PORT: 443
 };
 
