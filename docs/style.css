@@ -470,6 +470,14 @@ input[type="number"]:focus {
         color: #f3f4f6;
     }
     
+    .form-group label {
+        color: #f3f4f6;
+    }
+    
+    .sub-label {
+        color: #9ca3af;
+    }
+    
     input[type="date"],
     input[type="time"],
     input[type="number"] {
@@ -480,5 +488,9 @@ input[type="number"]:focus {
     
     .result-card {
         background: #374151;
+    }
+    
+    .result-card p {
+        color: #d1d5db;
     }
 }
