@@ -133,17 +133,7 @@ function validateSleepData(data) {
 
 async function sendToBackend(formData) {
     // Determine API URL based on environment
-    let apiUrl = '/api/analyze';
-    
-    // For local development on localhost
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        // If running with local server, adjust as needed
-    }
-    
-    // For production on vercel or other hosts
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        // apiUrl stays as /api/analyze (Vercel will route it correctly)
-    }
+    let apiUrl = determineApiUrl();
     
     try {
         const response = await fetch(apiUrl, {
@@ -168,6 +158,35 @@ async function sendToBackend(formData) {
         console.error('Backend error:', error);
         throw new Error(`Verbindungsfehler: ${error.message}`);
     }
+}
+
+// ===========================
+// API URL DETERMINATION
+// ===========================
+
+function determineApiUrl() {
+    const { hostname, port, protocol } = window.location;
+    
+    // Production: Vercel or same-host deployment
+    if (protocol === 'https:' || (!hostname.includes('localhost') && !hostname.includes('127.0.0.1'))) {
+        return '/api/analyze';
+    }
+    
+    // Local development: Frontend on different port than backend
+    // Frontend on 8000 (Python server) → Backend on 3000 (Node server)
+    if (port === '8000') {
+        return 'http://localhost:3000/api/analyze';
+    }
+    
+    // Raspberry Pi or same-host deployment
+    // Frontend served from same port/host as backend
+    if (hostname === 'raspberrypi.local' || hostname === 'raspberrypi' || 
+        (!port || port === '80' || port === '443')) {
+        return '/api/analyze';
+    }
+    
+    // Default: try relative path
+    return '/api/analyze';
 }
 
 // ===========================
