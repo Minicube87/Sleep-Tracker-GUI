@@ -1,12 +1,23 @@
 require("dotenv").config({ path: require('path').join(__dirname, '..', '.env') });
 const express = require("express");
 const bodyParser = require("body-parser");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
 const PORT = 3000;
 
 // Middleware
 app.use(bodyParser.json());
+
+// Rate Limiting: Max 30 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Max 30 Requests
+  message: 'Too many request from this IP. Wait some time.',
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  skip: (req) => req.path === '/', // Health Check nicht limitieren
+});
 
 // CORS aktivieren
 app.use((req, res, next) => {
@@ -24,16 +35,17 @@ app.use((req, res, next) => {
 // Importiere die Hauptfunktion
 const analyzeHandler = require("./analyze");
 
-// Route für /api/analyze
-app.post("/api/analyze", analyzeHandler);
+// Route für /api/analyze mit Rate Limiting
+app.post("/api/analyze", limiter, analyzeHandler);
 
-// GET / für Health Check
+// GET / für Health Check (ohne Rate Limiting)
 app.get("/", (req, res) => {
   res.send("Sleep Tracker API is running. Use POST /api/analyze to analyze sleep data.");
 });
 
 // Server starten
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
   console.log(`OPENAI_API_KEY loaded: ${process.env.OPENAI_API_KEY ? 'YES' : 'NO'}`);
+  console.log(`Rate Limiting: 30 requests per 15 minutes per IP`);
 });
