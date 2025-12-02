@@ -19,9 +19,19 @@ const limiter = rateLimit({
   skip: (req) => req.path === '/', // Health Check nicht limitieren
 });
 
-// CORS aktivieren
+// Allowed origins (security: restrict to known frontends)
+const ALLOWED_ORIGINS = [
+  'https://minicube87.github.io',
+  'http://localhost:8000',
+  'http://127.0.0.1:8000'
+];
+
+// CORS with origin validation
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
