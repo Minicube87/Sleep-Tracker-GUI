@@ -4,6 +4,11 @@
  * Integrates with OpenAI Chat Completion API
  */
 
+// Lade .env Variablen (lokal)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+}
+
 // Use native fetch (Node.js 18+)
 const fetch = globalThis.fetch;
 
@@ -64,9 +69,13 @@ module.exports = async (req, res) => {
         const userPrompt = createUserPrompt(formattedData);
         
         console.log('Sending request to OpenAI...');
+        console.log('API Key present:', !!apiKey);
+        console.log('System prompt length:', systemPrompt.length);
+        console.log('User prompt:', userPrompt);
         
         // Call OpenAI API
         const analysis = await callOpenAIAPI(apiKey, systemPrompt, userPrompt);
+        console.log('Analysis received from OpenAI');
         
         // Parse and structure the response
         const structuredAnalysis = parseAnalysis(analysis);
@@ -130,26 +139,52 @@ function formatSleepData(sleepData) {
 function createSystemPrompt() {
     return `Du bist ein Schlaf-Biohacking-Experte und Analyst für Schlafqualität.
 
-Du analysierst Schlaf-Daten und gibst strukturierte Analysen in folgendem JSON-Format zurück:
+Du analysierst Schlaf-Daten und gibst strukturierte Analysen in folgendem TEXT-Format zurück (NICHT JSON):
 
-\`\`\`json
-{
-  "score": "Eine Bewertung von 1-100 mit Emoji (z.B. 75/100 ⭐⭐⭐)",
-  "analysis": "Detaillierte Analyse der Schlafqualität (max 150 Worte). Erkläre kurz, was die Zahlen bedeuten.",
-  "trend": "Trend-Analyse für die letzten 9 Tage basierend auf den vorliegenden Daten (max 100 Worte). Wenn nur ein Tag vorliegt, erkläre, dass zu wenig Daten für Trend-Analyse vorhanden sind.",
-  "recommendation": "3-5 konkrete, umsetzbaren Empfehlungen zur Verbesserung (max 150 Worte). Format: Nummerierte Liste."
-}
-\`\`\`
+---
+
+📊 Rohdaten – [DATUM]
+
+Gesamtschlaf: [STUNDEN] h [MINUTEN] min
+Wach: [MINUTEN] min
+REM: [STUNDEN] h [MINUTEN] min
+Kern: [STUNDEN] h [MINUTEN] min
+Tief: [STUNDEN] h [MINUTEN] min
+Zeitraum: [VON] – [BIS]
+
+💯 Biohacker-Schlafscore
+
+[TABELLE MIT SCORES]
+
+➡️ Gesamt: [PUNKTE] / 50 = [PROZENT] % ([BEWERTUNG])
+
+🧠 Analyse
+
+[DETAILLIERTE ANALYSE - enthusiastisch, motivierend, konkret]
+
+⚠️ Was verbessert werden könnte
+
+[KONSTRUKTIVE TIPPS]
+
+📈 9-Tage-Trend
+
+[WENN VERFÜGBAR: Tabelle mit Verlauf]
+[WENN NICHT VERFÜGBAR: "Zu wenig Daten vorhanden"]
+
+🔥 Bottom Line
+
+[ZUSAMMENFASSUNG IN 2-3 SÄTZEN]
+
+---
 
 WICHTIG:
-- Antworte IMMER mit gültigem JSON
+- Antworte IMMER in DIESEM FORMAT (kein JSON!)
 - Nutze deutsche Sprache
-- Beachte die Zeichenlimits
-- Sei konstruktiv und motivierend
-- Berücksichtige REM, Light und Deep Sleep Verhältnisse
-- Ein guter REM-Anteil ist ~20-25% der Gesamtschlafdauer
-- Deep Sleep sollte ~13-23% sein
-- Länger als 10min Wach ist suboptimal`;
+- Sei enthusiastisch und motivierend (wie im Beispiel)
+- Verwende Emojis großzügig
+- Scores: Gesamtschlaf (7.5-9h ideal), Tiefschlaf (1.5-2h ideal), REM (1.5-2.5h ideal), Wachphasen (<15min ideal), Kontinuität (ruhig ideal)
+- Jeder Score 0-10 Punkte
+- Gesamtscore aus 5 Kategorien = max 50 Punkte`;
 }
 
 /**
@@ -163,9 +198,7 @@ function createUserPrompt(formattedData) {
 - REM-Schlaf: ${formattedData.rem}
 - Kern-Schlaf (Light): ${formattedData.light}
 - Tief-Schlaf (Deep): ${formattedData.deep}
-- Zeitspanne: ${formattedData.sleepSpan}
-
-Gebe die Analyse als JSON im vorgegeben Format zurück.`;
+- Zeitspanne: ${formattedData.sleepSpan}`;
 }
 
 /**
@@ -186,14 +219,14 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
                 content: userPrompt
             }
         ],
-        temperature: 0.7,
-        max_tokens: 1000,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0
+        temperature: 1,
+        max_completion_tokens: 1000
     };
     
     try {
+        console.log('Fetching OpenAI API:', url);
+        console.log('Payload:', JSON.stringify(payload));
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -203,21 +236,22 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
             body: JSON.stringify(payload)
         });
         
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Full OpenAI response:', JSON.stringify(data, null, 2));
+        
         if (!response.ok) {
-            const errorData = await response.json();
             throw new Error(
-                `OpenAI API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`
+                `OpenAI API Error: ${response.status} - ${data.error?.message || 'Unknown error'}`
             );
         }
         
-        const data = await response.json();
-        
         if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('Unexpected OpenAI response format');
+            throw new Error('Unexpected OpenAI response format: ' + JSON.stringify(data));
         }
         
         const content = data.choices[0].message.content;
-        console.log('OpenAI Response:', content);
+        console.log('OpenAI Response text:', content);
         
         return content;
         
@@ -231,38 +265,13 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
  * Parse and structure the analysis from OpenAI
  */
 function parseAnalysis(analysisText) {
-    try {
-        // Try to extract JSON from the response
-        const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-        
-        if (!jsonMatch) {
-            console.warn('No JSON found in response, using raw text');
-            return {
-                analysis: analysisText,
-                score: 'N/A',
-                trend: 'N/A',
-                recommendation: 'N/A'
-            };
-        }
-        
-        const parsed = JSON.parse(jsonMatch[0]);
-        
-        return {
-            score: parsed.score || 'N/A',
-            analysis: parsed.analysis || '',
-            trend: parsed.trend || '',
-            recommendation: parsed.recommendation || ''
-        };
-        
-    } catch (error) {
-        console.error('Failed to parse analysis:', error);
-        return {
-            analysis: analysisText,
-            score: 'N/A',
-            trend: 'N/A',
-            recommendation: 'N/A'
-        };
-    }
+    // Der Response kommt jetzt als direkter Text (nicht JSON)
+    return {
+        analysis: analysisText,
+        score: 'Siehe Analyse oben',
+        trend: 'Siehe Analyse oben',
+        recommendation: 'Siehe Analyse oben'
+    };
 }
 
 // Export for testing
