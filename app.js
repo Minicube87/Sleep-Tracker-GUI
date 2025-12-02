@@ -4,6 +4,15 @@
  * No external dependencies required
  */
 
+// ===========================
+// CONFIGURATION
+// ===========================
+const API_CONFIG = {
+    // IP of backend service
+    RPI_IP: '192.168.178.34',
+    RPI_PORT: 3000
+};
+
 // DOM Elements
 const sleepForm = document.getElementById('sleepForm');
 const submitBtn = document.getElementById('submitBtn');
@@ -167,13 +176,12 @@ async function sendToBackend(formData) {
 function determineApiUrl() {
     const { hostname, port, protocol } = window.location;
     
-    // Production: Vercel or same-host deployment
-    if (protocol === 'https:' || (!hostname.includes('localhost') && !hostname.includes('127.0.0.1'))) {
-        return '/api/analyze';
+    // GitHub Pages → Verbinde zur RPi
+    if (protocol === 'https:' && hostname.includes('github.io')) {
+        return `http://${API_CONFIG.RPI_IP}:${API_CONFIG.RPI_PORT}/api/analyze`;
     }
     
-    // Local development: Frontend on different port than backend
-    // Frontend on 8000 (Python server) → Backend on 3000 (Node server)
+    // Local development: Frontend on port 8000 → Backend on 3000
     if (port === '8000') {
         return 'http://localhost:3000/api/analyze';
     }
