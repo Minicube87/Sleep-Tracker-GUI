@@ -243,19 +243,50 @@ vercel --prod
 4. **Input validation** Backend validates all inputs
 5. **Configure CORS** Allow only specific origins
 
+## Production Deployment
+
+### Option 1: GitHub Pages + Raspberry Pi (Recommended)
+
+For a self-hosted solution that runs 24/7 without keeping your PC on:
+
+1. **Frontend:** Deployed on GitHub Pages (free, automatic)
+2. **Backend:** Runs on Raspberry Pi with pm2 (always online)
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete setup instructions.
+
+```bash
+# Quick start on RPi
+chmod +x setup-rpi.sh
+./setup-rpi.sh
+```
+
+### Option 2: Vercel (Easiest)
+
+Deploy both frontend and backend to Vercel:
+
+```bash
+npm install -g vercel
+vercel
+```
+
+---
+
 ## FAQ
 
 **Q: Can I use the API in my app?**
 A: Yes! The backend is publicly accessible via POST `/api/analyze`.
 
 **Q: How much does OpenAI cost?**
-A: ~$0.15 - $0.30 per analysis with gpt-4o-mini. Details: https://openai.com/pricing
+A: ~$0.0007 per analysis with gpt-4-turbo. ~$0.002/month for daily use. Details: https://openai.com/pricing
 
 **Q: Are my sleep data stored?**
 A: No, they are only sent to OpenAI for analysis and not stored locally.
 
 **Q: Can I use this for business?**
 A: Yes, but please respect the OpenAI Terms of Service and privacy regulations.
+
+**Q: How do I deploy to Raspberry Pi?**
+A: See [DEPLOYMENT.md](./DEPLOYMENT.md) for step-by-step instructions with pm2 setup.
 
 ## Credits & License
 

@@ -208,7 +208,7 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
     const url = 'https://api.openai.com/v1/chat/completions';
     
     const payload = {
-        model: 'gpt-4o-mini',
+        model: 'gpt-4-turbo',
         messages: [
             {
                 role: 'system',
@@ -220,7 +220,7 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
             }
         ],
         temperature: 1,
-        max_completion_tokens: 1000
+        max_completion_tokens: 1500
     };
     
     try {
@@ -263,12 +263,20 @@ async function callOpenAIAPI(apiKey, systemPrompt, userPrompt) {
 
 /**
  * Parse and structure the analysis from OpenAI
+ * Extracts score from the analysis text
  */
 function parseAnalysis(analysisText) {
-    // Der Response kommt jetzt als direkter Text (nicht JSON)
+    // Extract score from format: "➡️ Gesamt: 47 / 50 = 94 % (A+ Performance-Schlaf)"
+    const scoreMatch = analysisText.match(/➡️\s*Gesamt:\s*(\d+)\s*\/\s*50\s*=\s*([\d.]+)\s*%\s*\(([^)]+)\)/);
+    
+    let score = 'Siehe Analyse oben';
+    if (scoreMatch) {
+        score = `${scoreMatch[2]}% (${scoreMatch[3]})`;
+    }
+    
     return {
         analysis: analysisText,
-        score: 'Siehe Analyse oben',
+        score: score,
         trend: 'Siehe Analyse oben',
         recommendation: 'Siehe Analyse oben'
     };
