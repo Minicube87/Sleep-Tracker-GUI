@@ -2,163 +2,163 @@
 
 A mobile-optimized sleep tracking system with AI-powered sleep quality analysis using OpenAI ChatGPT API.
 
+## Live Demo
+
+**Frontend:** https://minicube87.github.io/Sleep-Tracker-GUI/
+
 ## Features
 
-- Mobile-optimized Responsive Design (iPhone/Android)
-- Input form for 7 sleep parameters
-- AI-powered analysis with OpenAI ChatGPT
-- 9-day trend analysis
+- Mobile-optimized responsive design (iPhone/Android)
+- Input form for 7 sleep parameters from Apple Watch
+- AI-powered biohacking-style analysis with OpenAI GPT-4-turbo
+- Sleep score calculation (0-50 points)
 - Personalized recommendations
-- No database required
-- Serverless deployment on Vercel
+- Rate limiting (30 requests per 15 minutes)
+- 24/7 operation on Raspberry Pi
+
+## Architecture
+
+```
+┌──────────────────────────────────┐
+│     GitHub Pages (Frontend)      │
+│   HTML + CSS + JavaScript        │
+└───────────────┬──────────────────┘
+                │ HTTPS
+                ▼
+┌──────────────────────────────────┐
+│      Raspberry Pi (Backend)      │
+│                                  │
+│  ┌────────────────────────────┐  │
+│  │  nginx (Port 443)          │  │
+│  │  SSL Reverse Proxy         │  │
+│  └─────────────┬──────────────┘  │
+│                │ HTTP            │
+│  ┌─────────────▼──────────────┐  │
+│  │  Node.js + Express (:3000) │  │
+│  │  Managed by pm2            │  │
+│  └─────────────┬──────────────┘  │
+└────────────────┼─────────────────┘
+                 │ HTTPS
+                 ▼
+┌──────────────────────────────────┐
+│         OpenAI API               │
+│       (gpt-4-turbo)              │
+└──────────────────────────────────┘
+```
 
 ## Tech Stack
 
 **Frontend:**
-
 - HTML5
-- CSS3 (Mobile-First, Flexbox)
+- CSS3 (Mobile-First, Flexbox, Gradients)
 - Vanilla JavaScript (no dependencies)
 
 **Backend:**
+- Node.js 18+
+- Express.js
+- express-rate-limit
+- dotenv
 
-- Node.js
-- Vercel Serverless Functions
-- OpenAI Chat Completion API (GPT-4o-mini)
+**Infrastructure:**
+- GitHub Pages (Frontend hosting)
+- Raspberry Pi (Backend hosting)
+- nginx (HTTPS reverse proxy)
+- pm2 (Process manager)
+- OpenAI Chat Completion API (GPT-4-turbo)
 
 ## Project Structure
 
 ```
 Sleep-Tracker-GUI/
-├── index.html              # Frontend HTML
-├── app.js                  # Frontend JavaScript
-├── style.css               # Frontend CSS
-├── package.json            # Node.js Package
-├── vercel.json             # Vercel Config
-├── .env.example            # Environment Template
-├── .gitignore              # Git Ignore
+├── docs/                   # GitHub Pages frontend
+│   ├── index.html
+│   ├── app.js
+│   └── style.css
 ├── api/
-│   └── analyze.js          # Backend API Endpoint
-└── README.md               # This File
+│   ├── server.js           # Express server
+│   └── analyze.js          # OpenAI integration
+├── setup-rpi.sh            # Raspberry Pi setup script
+├── setup-nginx.sh          # nginx HTTPS setup script
+├── .env.example            # Environment template
+├── package.json            # Node.js dependencies
+├── DEPLOYMENT.md           # Deployment guide
+├── JOURNEY.md              # Development journey documentation
+└── README.md               # This file
 ```
 
-## Installation & Setup
+## Quick Start
 
-### 1. Local Setup (Development)
+### Prerequisites
+
+- Node.js 18+ 
+- OpenAI API Key ([Get one here](https://platform.openai.com/api-keys))
+- Raspberry Pi (for 24/7 operation)
+
+### 1. Clone & Install
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/sleep-tracker-gui.git
-cd sleep-tracker-gui
+git clone https://github.com/Minicube87/Sleep-Tracker-GUI.git
+cd Sleep-Tracker-GUI
+npm install
+```
 
-# Install dependencies
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+nano .env
+# Add your OpenAI API key:
+# OPENAI_API_KEY=sk-your-key-here
+```
+
+### 3. Local Development
+
+```bash
+# Start backend
+node api/server.js
+
+# In another terminal - start frontend
+python3 -m http.server 8000 --directory docs
+# Open http://localhost:8000
+```
+
+### 4. Raspberry Pi Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions.
+
+Quick version:
+```bash
+# On Raspberry Pi
+git clone https://github.com/Minicube87/Sleep-Tracker-GUI.git
+cd Sleep-Tracker-GUI
 npm install
 
-# Create .env.local
-cp .env.example .env.local
+# Setup pm2
+chmod +x setup-rpi.sh
+./setup-rpi.sh
 
-# Add API Key (from OpenAI Platform)
-# Edit .env.local and add your OpenAI API Key
-nano .env.local
-```
+# Setup HTTPS (nginx)
+chmod +x setup-nginx.sh
+sudo bash setup-nginx.sh
 
-### 2. Generate OpenAI API Key
-
-1. Go to https://platform.openai.com/api-keys
-2. Sign in (or create an account)
-3. Generate a new API Key
-4. Copy the key into `.env.local`
-5. Save the file
-
-**IMPORTANT:** Never share your API key publicly!
-
-### 3. Local Testing
-
-```bash
-# Open frontend
-open index.html
-# or with Python Server
-python -m http.server 8000
-# Then navigate to http://localhost:8000
-```
-
-## Deployment on Vercel
-
-### Option 1: With GitHub + Vercel (Recommended)
-
-1. **Create GitHub Repository:**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Sleep Tracker"
-   git branch -M main
-   git remote add origin https://github.com/yourusername/sleep-tracker-gui.git
-   git push -u origin main
-   ```
-
-2. **Create Vercel Account:**
-   - Go to https://vercel.com
-   - Sign in with GitHub
-
-3. **Deploy Project on Vercel:**
-   - Click on "New Project"
-   - Select your repository
-   - Vercel recognizes it as Node.js/Static Project
-   - Click "Deploy"
-
-4. **Set Environment Variables:**
-   - Go to Project Settings > Environment Variables
-   - Add: `OPENAI_API_KEY` = (your API key)
-   - Save & redeploy
-
-### Option 2: Vercel CLI
-
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Deploy
-vercel
-
-# Set environment variable
-vercel env add OPENAI_API_KEY
-# (Enter your API key)
-
-# Deploy to production
-vercel --prod
+# Open firewall
+sudo ufw allow 443/tcp
 ```
 
 ## API Documentation
 
 ### Endpoint: POST `/api/analyze`
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "date": "2024-11-28",
-  "totalSleep": {
-    "hours": 7,
-    "minutes": 8
-  },
-  "awake": {
-    "minutes": 13
-  },
-  "rem": {
-    "hours": 1,
-    "minutes": 53
-  },
-  "light": {
-    "hours": 3,
-    "minutes": 50
-  },
-  "deep": {
-    "hours": 1,
-    "minutes": 25
-  },
-  "sleepTime": {
-    "from": "01:32",
-    "to": "08:53"
-  }
+  "date": "2024-12-02",
+  "totalSleep": { "hours": 7, "minutes": 30 },
+  "awake": { "minutes": 5 },
+  "rem": { "hours": 1, "minutes": 30 },
+  "light": { "hours": 3, "minutes": 0 },
+  "deep": { "hours": 2, "minutes": 30 },
+  "sleepTime": { "from": "22:00", "to": "05:30" }
 }
 ```
 
@@ -166,134 +166,71 @@ vercel --prod
 ```json
 {
   "success": true,
-  "message": "Analysis created successfully",
-  "timestamp": "2024-11-28T10:30:00.000Z",
+  "message": "Analyse erfolgreich erstellt",
+  "timestamp": "2024-12-02T10:30:00.000Z",
   "rawData": { ... },
-  "score": "75/100",
-  "analysis": "Your sleep quality was good yesterday...",
-  "trend": "Over the last 9 days...",
-  "recommendation": "1. Go to bed earlier...\n2. ..."
+  "score": "94% (A+ Performance-Schlaf)",
+  "analysis": "Rohdaten - 2024-12-02\n...",
+  "trend": "Siehe Analyse oben",
+  "recommendation": "Siehe Analyse oben"
 }
 ```
 
-## Usage
+## Sleep Parameters
 
-1. **Open the website** in your browser (mobile optimized)
-2. **Fill out the form:**
-   - Date of the night
-   - Total sleep duration
-   - Sleep phase details (REM, Light, Deep)
-   - Awake time
-   - Sleep time span (from-to)
-3. **Click "Analyze"**
-4. **Wait for AI analysis** (approx. 2-5 seconds)
-5. **Read the recommendations** and improve your sleep
+| Parameter | Description | Optimal Range |
+|-----------|-------------|---------------|
+| Total Sleep | Total sleep duration | 7-9 hours |
+| Awake | Time awake during night | < 15 minutes |
+| REM | Dream sleep phase | 1.5-2.5 hours |
+| Light | Light sleep (N1-N2) | 3-4 hours |
+| Deep | Deep sleep (N3) | 1.5-2 hours |
+| Time Span | Sleep start to end | Consistent schedule |
 
-## Sleep Parameters Explained
+## Cost Estimate
 
-| Parameter | Description | Optimal |
-|-----------|-------------|---------|
-| **Total Sleep** | Total sleep duration per night | 7-9 hours |
-| **Awake** | Time you were awake at night | < 10 minutes |
-| **REM Sleep** | Rapid Eye Movement (Dreams) | 20-25% of total duration |
-| **Light Sleep** | Light Sleep (N1-N2) | 45-55% of total duration |
-| **Deep Sleep** | Deep Sleep (N3) | 13-23% of total duration |
-| **Time Span** | From-to sleep times | Keep consistent |
+- ~$0.0007 per API request
+- Daily use: ~$0.02/month
+- Very affordable for personal use!
+
+## Security Notes
+
+Current implementation includes:
+- Rate limiting (30 requests per 15 minutes per IP)
+- CORS headers
+- Input validation
+- HTTPS via nginx (self-signed certificate)
+
+See [JOURNEY.md](./JOURNEY.md) for security analysis and improvement suggestions.
 
 ## Troubleshooting
 
-### "API Key missing" Error
+### "Connection Error: Failed to fetch"
+- Check if backend is running: `pm2 status`
+- Check nginx: `sudo systemctl status nginx`
+- Verify firewall: `sudo ufw status` (port 443 must be open)
 
-- Make sure `.env.local` exists
-- OpenAI API Key is correctly entered
-- Restart the server after changes
+### "Certificate Error"
+- Visit `https://YOUR_RPI_IP/` directly first
+- Click "Advanced" -> "Proceed anyway"
+- Browser needs to trust the self-signed certificate
 
-### "OpenAI API Error: 401"
-
-- API Key is expired/invalid
-- Generate a new key on platform.openai.com
-- Make sure your OpenAI account is active
-
-### "Connection error"
-
-- Check your internet connection
-- Backend running on Vercel? > Open Vercel Logs
-- CORS error? > Open Browser Developer Tools (F12)
-
-### Mobile design looks weird
-
-- Clear cache (Cmd+Shift+R / Ctrl+Shift+R)
-- Set viewport zoom to 100%
-- Test in incognito mode
-
-## Performance Tips
-
-- **Cache API calls:** Implement localStorage
-- **Progressive Web App:** Add service-worker.js
-- **Optimize CDN:** Compress images
-- **API Timeouts:** Increase max_tokens if needed
-
-## Security
-
-### Best Practices
-
-1. **Never expose API key in frontend** We use backend proxy
-2. **Use HTTPS** Vercel sets SSL automatically
-3. **Implement rate limiting** ToDo
-4. **Input validation** Backend validates all inputs
-5. **Configure CORS** Allow only specific origins
-
-## Production Deployment
-
-### Option 1: GitHub Pages + Raspberry Pi (Recommended)
-
-For a self-hosted solution that runs 24/7 without keeping your PC on:
-
-1. **Frontend:** Deployed on GitHub Pages (free, automatic)
-2. **Backend:** Runs on Raspberry Pi with pm2 (always online)
-
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete setup instructions.
-
+### Backend not responding
 ```bash
-# Quick start on RPi
-chmod +x setup-rpi.sh
-./setup-rpi.sh
+pm2 logs sleep-tracker
+sudo tail -f /var/log/nginx/error.log
 ```
 
-### Option 2: Vercel (Easiest)
+## Development Journey
 
-Deploy both frontend and backend to Vercel:
+Want to know how this project was built, including all the challenges and solutions? 
 
-```bash
-npm install -g vercel
-vercel
-```
+Check out [JOURNEY.md](./JOURNEY.md) for the full story!
+
+## License
+
+MIT
 
 ---
 
-## FAQ
-
-**Q: Can I use the API in my app?**
-A: Yes! The backend is publicly accessible via POST `/api/analyze`.
-
-**Q: How much does OpenAI cost?**
-A: ~$0.0007 per analysis with gpt-4-turbo. ~$0.002/month for daily use. Details: https://openai.com/pricing
-
-**Q: Are my sleep data stored?**
-A: No, they are only sent to OpenAI for analysis and not stored locally.
-
-**Q: Can I use this for business?**
-A: Yes, but please respect the OpenAI Terms of Service and privacy regulations.
-
-**Q: How do I deploy to Raspberry Pi?**
-A: See [DEPLOYMENT.md](./DEPLOYMENT.md) for step-by-step instructions with pm2 setup.
-
-## Credits & License
-
-Developed with love for better sleep.
- sa as
-**License:** MIT
-
----
-
-Good luck tracking your sleep!
+Built with mass amounts of mass amounts of mass amounts of caffeine and mass amounts of mass amounts of mass amounts of sleep deprivation for better sleep!
