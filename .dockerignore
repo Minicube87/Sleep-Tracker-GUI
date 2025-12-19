@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Documentation & Frontend (not needed in API container)
+docs/
+*.md
+JOURNEY.md
+README.md
+
+# IDE
+.vscode/
+.idea/
+
+# Environment files (mounted at runtime)
+.env
+.env.*
+!.env.example
+
+# Scripts
+*.sh
+
+# Tests
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
